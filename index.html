@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AG Barr | Higher Performance Workshop Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', 'Inter', system-ui, sans-serif; background: #F8F9FA; color: #333; }
+  :root { --navy: #1B2A4A; --orange: #E87722; --body: #333333; --grey: #666666; --light: #F5F5F5; --white: #FFFFFF; --comm: #E87722; --sc: #1B2A4A; --central: #2471A3; --stop: #C0392B; --start: #1E8449; --cont: #2471A3; }
+
+  .header { background: var(--navy); color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+  .header .sub { font-size: 11px; color: #A0B0C0; margin-top: 2px; }
+  .nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav button { background: rgba(255,255,255,0.1); color: white; border: none; padding: 6px 14px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .nav button.active { background: var(--orange); }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px 28px; }
+  .filters { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+  .filters button { background: white; color: var(--body); border: 1px solid #D0D0D0; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .filters button.active { color: white; border-color: transparent; }
+
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+  .stat { background: white; border: 1px solid #E0E0E0; border-radius: 8px; padding: 16px 20px; flex: 1; min-width: 120; }
+  .stat .val { font-size: 28px; font-weight: 700; }
+  .stat .label { font-size: 13px; font-weight: 600; color: var(--body); margin-top: 2px; }
+  .stat .sub { font-size: 11px; color: var(--grey); margin-top: 2px; }
+
+  .section-header { font-size: 17px; font-weight: 700; color: var(--navy); margin: 28px 0 12px; border-bottom: 2px solid var(--orange); padding-bottom: 6px; }
+
+  .card { background: white; border: 1px solid #E0E0E0; border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+  .card-pad { padding: 16px; }
+
+  .theme-bar { background: white; border: 1px solid #E0E0E0; border-radius: 6px; padding: 14px; margin-bottom: 10px; }
+  .theme-bar .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .theme-bar .name { font-weight: 700; color: var(--navy); font-size: 14px; }
+  .theme-bar .count { font-weight: 700; color: var(--orange); font-size: 14px; }
+  .theme-bar .track { background: #E8E8E8; border-radius: 4px; height: 8px; margin-bottom: 8px; }
+  .theme-bar .fill { background: var(--orange); border-radius: 4px; height: 8px; transition: width 0.5s; }
+  .theme-bar .desc { font-size: 12px; color: var(--grey); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { background: var(--navy); color: white; padding: 10px; font-size: 12px; font-weight: 600; text-align: center; }
+  th:first-child { text-align: left; }
+  td { padding: 8px 10px; font-size: 13px; border-bottom: 1px solid #E8E8E8; text-align: center; }
+  td:first-child { text-align: left; font-weight: 600; color: var(--navy); }
+  tr:hover { background: #FAFAFA; }
+
+  .badge { display: inline-block; font-size: 10px; font-weight: 600; color: white; padding: 2px 8px; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
+  .badge-comm { background: var(--comm); }
+  .badge-sc { background: var(--sc); }
+  .badge-central { background: var(--central); }
+
+  .tag { display: inline-block; background: var(--light); color: var(--body); font-size: 11px; padding: 3px 10px; border-radius: 12px; border: 1px solid #E0E0E0; margin: 2px; }
+  .tag-navy { background: var(--navy); color: white; border-color: var(--navy); }
+  .tag-orange { background: var(--orange); color: white; border-color: var(--orange); }
+
+  .area-header { color: white; padding: 8px 14px; border-radius: 6px 6px 0 0; font-size: 13px; font-weight: 700; }
+  .area-body { background: white; border: 1px solid #E0E0E0; border-radius: 0 0 6px 6px; }
+  .area-row { padding: 10px 14px; border-bottom: 1px solid #F0F0F0; }
+  .area-row:last-child { border-bottom: none; }
+  .area-row .team-name { font-weight: 700; color: var(--navy); font-size: 13px; margin-bottom: 4px; }
+
+  .priority-num { color: var(--orange); font-weight: 700; margin-right: 4px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .cluster-card { background: white; border: 1px solid #E0E0E0; border-radius: 6px; padding: 12px; }
+  .cluster-card .top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .cluster-card .cname { font-weight: 700; color: var(--navy); font-size: 13px; }
+  .cluster-card .ccount { font-weight: 700; color: var(--orange); font-size: 13px; }
+  .cluster-card .cwords { font-size: 11px; color: var(--grey); }
+
+  .priority-stat { background: white; border: 1px solid #E0E0E0; border-radius: 6px; padding: 12px; }
+  .priority-stat .pval { font-size: 22px; font-weight: 700; }
+  .priority-stat .plabel { font-size: 12px; font-weight: 600; color: var(--body); }
+  .priority-stat .psub { font-size: 11px; color: var(--grey); }
+
+  .team-btn { background: white; border: 1px solid #D0D0D0; border-radius: 6px; padding: 10px 16px; cursor: pointer; min-width: 140px; text-align: left; }
+  .team-btn:hover { border-color: var(--orange); }
+  .team-btn .tname { font-weight: 700; font-size: 13px; color: var(--navy); }
+  .team-btn .tsub { font-size: 11px; color: var(--grey); margin-top: 2px; }
+
+  .back-btn { background: none; border: none; color: var(--orange); font-size: 12px; font-weight: 600; cursor: pointer; margin-bottom: 12px; padding: 0; }
+
+  .detail-priority { background: white; border: 1px solid #E0E0E0; border-radius: 6px; padding: 10px 14px; margin-bottom: 6px; border-left: 3px solid var(--orange); }
+
+  .chart-container { background: white; border: 1px solid #E0E0E0; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+
+  .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #E0E0E0; text-align: center; }
+  .footer .f1 { font-size: 11px; color: var(--grey); }
+  .footer .f2 { font-size: 10px; color: #AAA; margin-top: 4px; font-style: italic; }
+
+  .hidden { display: none; }
+
+  @media (max-width: 700px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .stats { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Higher Performance Workshops</h1>
+    <div class="sub">Cross-Team Dashboard | People Performance | AG Barr</div>
+  </div>
+  <div class="nav" id="mainNav">
+    <button class="active" data-view="overview">Overview</button>
+    <button data-view="themes">Themes</button>
+    <button data-view="words">Words</button>
+    <button data-view="priorities">Priorities</button>
+    <button data-view="teams">Teams</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="filters" id="areaFilters">
+    <button class="active" data-area="All" style="background:var(--navy);color:white;border-color:transparent;">All Areas</button>
+    <button data-area="Commercial">Commercial</button>
+    <button data-area="Supply Chain">Supply Chain</button>
+    <button data-area="Central">Central</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="view-overview">
+    <div class="stats">
+      <div class="stat" style="border-top:3px solid var(--navy)"><div class="val" style="color:var(--navy)">15</div><div class="label">Teams</div><div class="sub">Across 3 areas</div></div>
+      <div class="stat" style="border-top:3px solid var(--orange)"><div class="val" style="color:var(--orange)">188</div><div class="label">HP Words</div><div class="sub">Named by teams</div></div>
+      <div class="stat" style="border-top:3px solid var(--stop)"><div class="val" style="color:var(--stop)">56</div><div class="label">Stops</div><div class="sub">Behaviours to end</div></div>
+      <div class="stat" style="border-top:3px solid var(--start)"><div class="val" style="color:var(--start)">64</div><div class="label">Starts</div><div class="sub">Behaviours to begin</div></div>
+      <div class="stat" style="border-top:3px solid var(--cont)"><div class="val" style="color:var(--cont)">42</div><div class="label">Continues</div><div class="sub">Strengths to protect</div></div>
+      <div class="stat" style="border-top:3px solid var(--navy)"><div class="val" style="color:var(--navy)">42</div><div class="label">Priorities</div><div class="sub">90-day commitments</div></div>
+    </div>
+
+    <div class="section-header">3 Company Themes</div>
+    <div class="theme-bar"><div class="top"><span class="name">1. The Coaching Gap</span><span class="count">11 / 15 teams</span></div><div class="track"><div class="fill" style="width:73%"></div></div><div class="desc">Leaders working down a level. Not enough big-picture strategy. Teams want trust and empowerment.</div></div>
+    <div class="theme-bar"><div class="top"><span class="name">2. Prioritisation</span><span class="count">13 / 15 teams</span></div><div class="track"><div class="fill" style="width:87%"></div></div><div class="desc">When everything is a priority, nothing is a priority. Too reactive. Not enough structured work time.</div></div>
+    <div class="theme-bar"><div class="top"><span class="name">3. Meeting Culture</span><span class="count">10 / 15 teams</span></div><div class="track"><div class="fill" style="width:67%"></div></div><div class="desc">Too many meetings. No consideration in booking. No time to do other work.</div></div>
+
+    <div class="section-header">All Teams Overview</div>
+    <div class="card">
+      <table id="overviewTable">
+        <thead><tr><th>Team</th><th>HP Words</th><th>Stops</th><th>Starts</th><th>Continues</th><th>Priorities</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="section-header">Data by Area</div>
+    <div class="chart-container"><canvas id="areaChart" height="260"></canvas></div>
+  </div>
+
+  <!-- THEMES -->
+  <div id="view-themes" class="hidden">
+    <div class="section-header">Company Themes - The 3 Universal Findings</div>
+    <div class="theme-bar"><div class="top"><span class="name">1. The Coaching Gap</span><span class="count">11 / 15 teams (73%)</span></div><div class="track"><div class="fill" style="width:73%"></div></div><div class="desc">Leaders doing too much operational work instead of working through their teams. Teams want trust and empowerment. Not enough strategic work happening because leaders are consumed by tasks their teams should own.</div></div>
+    <div class="theme-bar"><div class="top"><span class="name">2. Prioritisation</span><span class="count">13 / 15 teams (87%)</span></div><div class="track"><div class="fill" style="width:87%"></div></div><div class="desc">When everything is a priority, nothing is a priority. Teams are too reactive, not proactive enough. They struggle to push back and ask for clarity. Not enough time for structured, strategic work.</div></div>
+    <div class="theme-bar"><div class="top"><span class="name">3. Meeting Culture</span><span class="count">10 / 15 teams (67%)</span></div><div class="track"><div class="fill" style="width:67%"></div></div><div class="desc">Too many meetings. Too many meetings people do not need to be in. No consideration when booking meetings. No time to do other work because the calendar is full.</div></div>
+
+    <div class="section-header">Area Theme Comparison</div>
+    <div class="chart-container"><canvas id="radarChart" height="320"></canvas></div>
+
+    <div class="section-header">Theme Titles by Team</div>
+    <div id="themesByTeam"></div>
+  </div>
+
+  <!-- WORDS -->
+  <div id="view-words" class="hidden">
+    <div class="section-header">Most Cited HP Words Across All Teams</div>
+    <div class="chart-container"><canvas id="wordChart" height="480"></canvas></div>
+
+    <div class="section-header">Word Clusters</div>
+    <div class="grid-2" id="wordClusters"></div>
+  </div>
+
+  <!-- PRIORITIES -->
+  <div id="view-priorities" class="hidden">
+    <div class="section-header">90-Day Priorities - All Teams</div>
+    <p style="font-size:12px;color:var(--grey);margin-bottom:14px;">42 priorities committed across 15 teams. Every team has at least 1 priority linked to meetings, time, or communication.</p>
+    <div id="prioritiesByArea"></div>
+
+    <div class="section-header">Priority Themes Distribution</div>
+    <div class="grid-3" id="priorityStats"></div>
+  </div>
+
+  <!-- TEAMS -->
+  <div id="view-teams" class="hidden">
+    <div id="teamList">
+      <div class="section-header">Select a Team</div>
+      <div id="teamGrid"></div>
+    </div>
+    <div id="teamDetail" class="hidden"></div>
+  </div>
+
+  <div class="footer">
+    <div class="f1">AG Barr | People Performance | Higher Performance Workshop Data | 2026</div>
+    <div class="f2">When we achieve Dare to Double, it will be because of who we became - not what we chased.</div>
+  </div>
+</div>
+
+<script>
+const TEAMS = [
+  { name: "Commercial LT", area: "Commercial", hp: 10, stops: 5, starts: 4, continues: 0, priorities: ["Meeting / Trust / Message", "Flow of Info for Empowerment", "Walk/Talk to Statements", "You Said / We Did", "Consistency"], themes: ["Leadership Level Discipline", "Alignment Beyond the Room", "Communication as Infrastructure", "Trust as the Foundation"], hpWords: ["Brave", "Authentic", "Fun", "High Care High Challenge", "Engaged/Connected", "Active Listening", "Caring Language", "Committed/Aligned", "Speed of Resolving", "Challenging"] },
+  { name: "Retail", area: "Commercial", hp: 17, stops: 4, starts: 5, continues: 3, priorities: ["Meeting Charter & Weekly Alignment", "Deep Work Protection & Prioritisation", "Cross-Team Connection & Customer Immersion", "Celebration & Recognition"], themes: ["Eliminate Duplication & Clarify Outcomes", "Intentional Speed over Constant Activity", "Breaking Silos Through Connection", "Sustaining the Entrepreneurial Spark"], hpWords: ["Trust", "Communication", "Collaboration", "Accountability", "Be Brave", "Ambitious", "Empowered", "Energised", "Empathy", "Curious", "Valued", "Supportive", "Clarity", "Adaptability", "Excellence", "Focused", "Aligned"] },
+  { name: "OOH & I", area: "Commercial", hp: 11, stops: 5, starts: 5, continues: 3, priorities: ["Structured Collaboration", "Clarity Workshop - North Star", "Customer Listening Series", "Celebrate Wins"], themes: ["Breaking Down the Walls", "The Why Over the What", "Proactive Agility", "Maintaining the Human Element"], hpWords: ["Collaboration", "Motivation", "Positivity", "Connected", "Education", "Communication", "Productivity", "Teamwork/Togetherness", "Agile", "Curious about each other", "Tenacious"] },
+  { name: "Impulse", area: "Commercial", hp: 10, stops: 3, starts: 3, continues: 3, priorities: ["Monday Green Conversations & Post-Success Analysis", "Friday Reflect", "More Planful"], themes: ["Capacity as Strategy", "Digital Discipline", "From Answers to Questions"], hpWords: ["Trust", "Proactive", "Focused", "Open minded", "Aligned", "Driven", "Clarity", "Representing teams over self", "Collaborative", "Challenging"] },
+  { name: "Irn-Bru Brand", area: "Commercial", hp: 14, stops: 3, starts: 3, continues: 1, priorities: ["Meeting Priorities", "Go for Lunch on Tuesday", "Time Blocking"], themes: ["Protecting Creative Capacity", "Meeting Discipline", "From Busy to Intentional", "Building Visibility Through Networking"], hpWords: ["Bold", "Brave", "Hungry", "Energised", "Focused", "Agile", "Resilient", "Supportive", "Connected", "Valued", "Honest", "Clarity", "Consistent", "Recognition"] },
+  { name: "R&D + I", area: "Commercial", hp: 14, stops: 4, starts: 4, continues: 3, priorities: ["Monthly Leadership Team Meeting", "Openness, Honest, Authentic"], themes: ["Resilience & Growth", "Leadership Visibility", "Communication - Human Connection", "Agility vs. Capacity"], hpWords: ["Innovation mindset", "Elevate mindset", "Growth mindset", "When things don't work", "We sell what we can make", "Change over time", "Connected", "Leading by example", "Engaged/positivity", "Confidence", "Consistent", "Leadership as one", "Communication", "Inspire"] },
+  { name: "SC Leadership Team", area: "Supply Chain", hp: 13, stops: 1, starts: 4, continues: 1, priorities: ["Involving Teams / Coaching - Share Examples", "Communication / Education - Pace, Why, Future"], themes: ["The Capacity Problem", "From Directing to Coaching", "Communication as Infrastructure", "Protecting What Works"], hpWords: ["Calm", "Decisive", "Trust", "Safe place", "No ego", "Count on each other", "Humility", "Clarity of language", "Clarity in priorities", "Unified", "Challenge", "Risk", "Understanding pace of change"] },
+  { name: "Projects", area: "Supply Chain", hp: 9, stops: 5, starts: 7, continues: 7, priorities: ["Identify Priorities for the Week", "Time Blocking"], themes: ["The Priority Vacuum", "Decision Velocity", "Calendar Control", "Protecting the Culture"], hpWords: ["Big picture", "Proactive", "Business", "Agile", "Relationships", "Communication", "Supportive", "Resilient", "Can do attitude"] },
+  { name: "Procurement", area: "Supply Chain", hp: 6, stops: 3, starts: 3, continues: 6, priorities: ["Spotlighting PDP", "Review Friday Meeting"], themes: ["From Back Office to Boardroom", "Protecting What Works", "Developing the Team"], hpWords: ["Human", "Caring", "Trust", "Strategic", "Clarity", "Freedom"] },
+  { name: "SC Cumbernauld", area: "Supply Chain", hp: 11, stops: 3, starts: 3, continues: 3, priorities: ["One Team / Consistent Message"], themes: ["One Team Philosophy", "Leadership as The Weather", "Clarity & Time Management", "Authentic Communication", "Factory Change"], hpWords: ["Inspirational", "Focus", "Supportive", "Engagement", "Empathy", "Understanding", "Consistency", "Feedback", "Communication", "Authentic"] },
+  { name: "SC Milton Keynes", area: "Supply Chain", hp: 30, stops: 4, starts: 5, continues: 5, priorities: ["Evidence Base", "Working Through the Teams", "Honesty"], themes: ["Individual Heroics to Team Empowerment", "Operational Rigor & Evidence-Based", "Calm & Considered Culture", "Transparency as Trust Foundation", "Verification to Confidence"], hpWords: ["Reliable", "Consistent", "Structured", "Goal-Driven", "Accountable", "Organised", "Decisive", "Prompt", "Professional", "Energised", "Focused", "Empowered", "Confident", "Enthusiastic", "Dynamic", "Engaged", "Aligned", "Inclusive", "Approachable", "Respectful", "Empathetic", "Smiling", "Calm", "Fluid", "Adaptable", "Flexible", "Considered", "Thoughtful", "Transparent", "Evidence-based"] },
+  { name: "Finance", area: "Central", hp: 11, stops: 7, starts: 6, continues: 1, priorities: ["Say No to Irrelevant Meetings", "Time Blocking - Protecting Deep Work"], themes: ["The Compliance Trap", "Process Integrity", "From Reactive to Planful", "Permission to Challenge"], hpWords: ["Energised", "Motivated", "Patient & Calm", "Calming", "Collaborative", "Cohesive", "Flow", "Planful", "Reliable", "Meeting Targets", "Ownership"] },
+  { name: "Legal", area: "Central", hp: 9, stops: 4, starts: 4, continues: 1, priorities: ["Book Time to Talk About Triage", "Reframe Threat as Opportunity"], themes: ["The Confidence Gap", "Triage as Transformation", "Reframing the Role", "Holding the Line"], hpWords: ["Empowering", "Accountable", "Challenging", "Teamwork", "Communicate", "Recognised", "Prioritise", "Keep it simple", "Consistent Challenge"] },
+  { name: "Legal & ESG", area: "Central", hp: 14, stops: 3, starts: 5, continues: 3, priorities: ["Positive Environment & Wellbeing", "Purpose of Meetings - If Not Clear, Saying No", "Prioritising Journey to Strategy"], themes: ["Dismantling the Safety Net", "Reclaiming the Calendar", "Wellbeing as Performance Infrastructure", "Educating the Business"], hpWords: ["Supportive", "Empathy", "Teamwork", "Recognition", "Proactive", "Prioritise", "Clarity", "Consistent", "Positive", "Energised", "Communicate", "Integrate", "Willing to say no/yes", "Risk"] },
+  { name: "PCLT", area: "Central", hp: 9, stops: 2, starts: 3, continues: 2, priorities: ["Empowerment - Delegate", "RACI Definition", "Coaching in 1-on-1s", "Communication - Transparency Update"], themes: ["The Integration Paradox", "Friction is Information", "Coaching as a Discipline", "Communication Frequency & Clarity"], hpWords: ["Controlling Controllables", "United & Aligned", "Transparency", "Honesty", "Humanity", "Curiosity", "Challenging with Care", "RACI", "Prioritise & Empower"] }
+];
+
+const AREAS_CONFIG = {
+  "Commercial": { color: "#E87722", teams: ["Commercial LT", "Retail", "OOH & I", "Impulse", "Irn-Bru Brand", "R&D + I"] },
+  "Supply Chain": { color: "#1B2A4A", teams: ["SC Leadership Team", "Projects", "Procurement", "SC Cumbernauld", "SC Milton Keynes"] },
+  "Central": { color: "#2471A3", teams: ["Finance", "Legal", "Legal & ESG", "PCLT"] }
+};
+
+const WORD_FREQ = [
+  { word: "Communication", count: 13 }, { word: "Trust", count: 12 }, { word: "Clarity", count: 11 },
+  { word: "Collaboration", count: 10 }, { word: "Supportive", count: 9 }, { word: "Resilient", count: 8 },
+  { word: "Aligned", count: 8 }, { word: "Energised", count: 8 }, { word: "Empowered", count: 7 },
+  { word: "Proactive", count: 7 }, { word: "Accountability", count: 6 }, { word: "Consistency", count: 6 },
+  { word: "Focused", count: 6 }, { word: "Honesty", count: 6 }, { word: "Brave", count: 5 },
+  { word: "Connected", count: 5 }, { word: "Openness", count: 5 }
+];
+
+const CLUSTERS = [
+  { name: "Clarity & Alignment", count: 20, words: "Clarity, Aligned, Focused, Consistency, One Team" },
+  { name: "Trust & Safety", count: 19, words: "Trust, Openness, Honesty, Psychological Safety, Humility" },
+  { name: "Communication & Transparency", count: 18, words: "Communication, Transparency, Caring Language, Feedback" },
+  { name: "Growth & Resilience", count: 18, words: "Innovation, Growth mindset, Resilience, Confidence" },
+  { name: "Empowerment & Ownership", count: 17, words: "Empowered, Accountability, Ownership, Autonomy" },
+  { name: "Energy & Engagement", count: 17, words: "Energised, Motivation, Engaged, Positive, Recognition" },
+  { name: "Collaboration & Connection", count: 20, words: "Collaboration, Connected, Teamwork, Supportive" },
+  { name: "Operational Excellence", count: 16, words: "Focused, Planful, Proactive, Decisive, Consistent" }
+];
+
+const PRIORITY_STATS = [
+  { label: "Meeting-related", count: 10, pct: 24, color: "#C0392B" },
+  { label: "Time/Calendar", count: 8, pct: 19, color: "#E87722" },
+  { label: "Communication", count: 7, pct: 17, color: "#1B2A4A" },
+  { label: "Coaching/Empowerment", count: 6, pct: 14, color: "#1E8449" },
+  { label: "Culture/Wellbeing", count: 6, pct: 14, color: "#2471A3" },
+  { label: "Strategic/Planning", count: 5, pct: 12, color: "#666666" }
+];
+
+let currentView = "overview";
+let currentArea = "All";
+let selectedTeam = null;
+
+function getBadgeClass(area) {
+  if (area === "Commercial") return "badge-comm";
+  if (area === "Supply Chain") return "badge-sc";
+  return "badge-central";
+}
+
+function getFiltered() {
+  return currentArea === "All" ? TEAMS : TEAMS.filter(t => t.area === currentArea);
+}
+
+function renderOverviewTable() {
+  const tbody = document.querySelector("#overviewTable tbody");
+  tbody.innerHTML = getFiltered().map(t => `
+    <tr>
+      <td>${t.name}<span class="badge ${getBadgeClass(t.area)}">${t.area}</span></td>
+      <td>${t.hp}</td>
+      <td style="color:var(--stop)">${t.stops}</td>
+      <td style="color:var(--start)">${t.starts}</td>
+      <td style="color:var(--cont)">${t.continues}</td>
+      <td style="font-weight:600">${t.priorities.length}</td>
+    </tr>
+  `).join("");
+}
+
+function renderAreaChart() {
+  const ctx = document.getElementById("areaChart").getContext("2d");
+  if (window.areaChartInstance) window.areaChartInstance.destroy();
+
+  const areaData = Object.entries(AREAS_CONFIG).map(([name, cfg]) => {
+    const teams = TEAMS.filter(t => t.area === name);
+    return {
+      area: name,
+      hp: teams.reduce((s, t) => s + t.hp, 0),
+      stops: teams.reduce((s, t) => s + t.stops, 0),
+      starts: teams.reduce((s, t) => s + t.starts, 0),
+      continues: teams.reduce((s, t) => s + t.continues, 0),
+      priorities: teams.reduce((s, t) => s + t.priorities.length, 0)
+    };
+  });
+
+  window.areaChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: areaData.map(d => d.area),
+      datasets: [
+        { label: "HP Words", data: areaData.map(d => d.hp), backgroundColor: "#1B2A4A" },
+        { label: "Stops", data: areaData.map(d => d.stops), backgroundColor: "#C0392B" },
+        { label: "Starts", data: areaData.map(d => d.starts), backgroundColor: "#1E8449" },
+        { label: "Continues", data: areaData.map(d => d.continues), backgroundColor: "#2471A3" },
+        { label: "Priorities", data: areaData.map(d => d.priorities), backgroundColor: "#E87722" }
+      ]
+    },
+    options: { responsive: true, plugins: { legend: { labels: { font: { size: 11 } } } }, scales: { y: { beginAtZero: true } } }
+  });
+}
+
+function renderRadarChart() {
+  const ctx = document.getElementById("radarChart").getContext("2d");
+  if (window.radarChartInstance) window.radarChartInstance.destroy();
+
+  window.radarChartInstance = new Chart(ctx, {
+    type: "radar",
+    data: {
+      labels: ["Trust", "Clarity", "Communication", "Collaboration", "Empowerment", "Resilience", "Energy", "Proactive"],
+      datasets: [
+        { label: "Commercial", data: [5, 5, 6, 5, 4, 5, 5, 4], borderColor: "#E87722", backgroundColor: "rgba(232,119,34,0.1)", borderWidth: 2, pointRadius: 3 },
+        { label: "Supply Chain", data: [4, 4, 4, 3, 4, 3, 3, 4], borderColor: "#1B2A4A", backgroundColor: "rgba(27,42,74,0.1)", borderWidth: 2, pointRadius: 3 },
+        { label: "Central", data: [3, 3, 4, 2, 2, 2, 3, 2], borderColor: "#2471A3", backgroundColor: "rgba(36,113,163,0.1)", borderWidth: 2, pointRadius: 3 }
+      ]
+    },
+    options: { responsive: true, scales: { r: { beginAtZero: true, max: 6, ticks: { stepSize: 1, font: { size: 10 } }, pointLabels: { font: { size: 12 } } } }, plugins: { legend: { labels: { font: { size: 11 } } } } }
+  });
+}
+
+function renderWordChart() {
+  const ctx = document.getElementById("wordChart").getContext("2d");
+  if (window.wordChartInstance) window.wordChartInstance.destroy();
+
+  window.wordChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: WORD_FREQ.map(w => w.word),
+      datasets: [{
+        data: WORD_FREQ.map(w => w.count),
+        backgroundColor: WORD_FREQ.map((_, i) => i < 3 ? "#E87722" : i < 6 ? "#1B2A4A" : "#666666"),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: "y", responsive: true,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.raw} / 15 teams` } } },
+      scales: { x: { max: 15, ticks: { font: { size: 11 } } }, y: { ticks: { font: { size: 12, weight: "bold" } } } }
+    }
+  });
+}
+
+function renderThemesByTeam() {
+  const el = document.getElementById("themesByTeam");
+  el.innerHTML = getFiltered().map(t => `
+    <div style="background:white;border:1px solid #E0E0E0;border-radius:6px;padding:12px;margin-bottom:8px;">
+      <div style="font-weight:700;color:var(--navy);font-size:13px;margin-bottom:6px;">${t.name}<span class="badge ${getBadgeClass(t.area)}">${t.area}</span></div>
+      <div>${t.themes.map(th => `<span class="tag">${th}</span>`).join("")}</div>
+    </div>
+  `).join("");
+}
+
+function renderClusters() {
+  document.getElementById("wordClusters").innerHTML = CLUSTERS.map(c => `
+    <div class="cluster-card"><div class="top"><span class="cname">${c.name}</span><span class="ccount">${c.count}</span></div><div class="cwords">${c.words}</div></div>
+  `).join("");
+}
+
+function renderPrioritiesByArea() {
+  const el = document.getElementById("prioritiesByArea");
+  el.innerHTML = Object.entries(AREAS_CONFIG).map(([areaName, cfg]) => {
+    const teams = TEAMS.filter(t => t.area === areaName);
+    return `
+      <div style="margin-bottom:20px;">
+        <div class="area-header" style="background:${cfg.color}">${areaName}</div>
+        <div class="area-body">
+          ${teams.map((t, i) => `
+            <div class="area-row" ${i === teams.length - 1 ? 'style="border-bottom:none"' : ''}>
+              <div class="team-name">${t.name}</div>
+              <div>${t.priorities.map((p, j) => `<span class="tag"><span class="priority-num">${j + 1}.</span>${p}</span>`).join("")}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderPriorityStats() {
+  document.getElementById("priorityStats").innerHTML = PRIORITY_STATS.map(p => `
+    <div class="priority-stat" style="border-left:3px solid ${p.color}"><div class="pval" style="color:${p.color}">${p.count}</div><div class="plabel">${p.label}</div><div class="psub">${p.pct}% of all priorities</div></div>
+  `).join("");
+}
+
+function renderTeamGrid() {
+  const el = document.getElementById("teamGrid");
+  el.innerHTML = Object.entries(AREAS_CONFIG).map(([areaName, cfg]) => {
+    const teams = getFiltered().filter(t => t.area === areaName);
+    if (!teams.length) return "";
+    return `
+      <div style="margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;color:${cfg.color};margin-bottom:6px;">${areaName}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${teams.map(t => `<button class="team-btn" onclick="showTeam('${t.name}')"><div class="tname">${t.name}</div><div class="tsub">${t.hp} words | ${t.priorities.length} priorities</div></button>`).join("")}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function showTeam(name) {
+  selectedTeam = TEAMS.find(t => t.name === name);
+  if (!selectedTeam) return;
+  document.getElementById("teamList").classList.add("hidden");
+  const el = document.getElementById("teamDetail");
+  el.classList.remove("hidden");
+  el.innerHTML = `
+    <button class="back-btn" onclick="hideTeam()">&#8592; Back to all teams</button>
+    <div class="card card-pad" style="margin-bottom:16px;">
+      <div style="font-size:20px;font-weight:700;color:var(--navy);">${selectedTeam.name}<span class="badge ${getBadgeClass(selectedTeam.area)}">${selectedTeam.area}</span></div>
+      <div class="stats" style="margin-top:12px;">
+        <div class="stat" style="border-top:3px solid var(--orange)"><div class="val" style="color:var(--orange)">${selectedTeam.hp}</div><div class="label">HP Words</div></div>
+        <div class="stat" style="border-top:3px solid var(--stop)"><div class="val" style="color:var(--stop)">${selectedTeam.stops}</div><div class="label">Stops</div></div>
+        <div class="stat" style="border-top:3px solid var(--start)"><div class="val" style="color:var(--start)">${selectedTeam.starts}</div><div class="label">Starts</div></div>
+        <div class="stat" style="border-top:3px solid var(--cont)"><div class="val" style="color:var(--cont)">${selectedTeam.continues}</div><div class="label">Continues</div></div>
+      </div>
+    </div>
+    <div class="section-header">HP Words</div>
+    <div style="margin-bottom:16px;">${selectedTeam.hpWords.map(w => `<span class="tag tag-navy">${w}</span>`).join("")}</div>
+    <div class="section-header">Themes</div>
+    <div style="margin-bottom:16px;">${selectedTeam.themes.map(th => `<span class="tag tag-orange">${th}</span>`).join("")}</div>
+    <div class="section-header">90-Day Priorities</div>
+    ${selectedTeam.priorities.map((p, i) => `<div class="detail-priority"><span style="font-weight:700;color:var(--orange);margin-right:8px;">Priority ${i + 1}</span><span style="font-size:13px;">${p}</span></div>`).join("")}
+  `;
+}
+
+function hideTeam() {
+  selectedTeam = null;
+  document.getElementById("teamList").classList.remove("hidden");
+  document.getElementById("teamDetail").classList.add("hidden");
+}
+
+function switchView(view) {
+  currentView = view;
+  selectedTeam = null;
+  document.querySelectorAll("[id^='view-']").forEach(el => el.classList.add("hidden"));
+  document.getElementById("view-" + view).classList.remove("hidden");
+  document.querySelectorAll(".nav button").forEach(b => b.classList.toggle("active", b.dataset.view === view));
+
+  if (view === "overview") { renderOverviewTable(); renderAreaChart(); }
+  if (view === "themes") { renderThemesByTeam(); renderRadarChart(); }
+  if (view === "words") { renderWordChart(); renderClusters(); }
+  if (view === "priorities") { renderPrioritiesByArea(); renderPriorityStats(); }
+  if (view === "teams") { renderTeamGrid(); hideTeam(); }
+}
+
+function switchArea(area) {
+  currentArea = area;
+  document.querySelectorAll(".filters button").forEach(b => {
+    const isActive = b.dataset.area === area;
+    b.classList.toggle("active", isActive);
+    if (isActive) {
+      const c = area === "All" ? "#1B2A4A" : (AREAS_CONFIG[area]?.color || "#1B2A4A");
+      b.style.background = c; b.style.color = "white"; b.style.borderColor = "transparent";
+    } else {
+      b.style.background = "white"; b.style.color = "#333"; b.style.borderColor = "#D0D0D0";
+    }
+  });
+  switchView(currentView);
+}
+
+document.querySelectorAll(".nav button").forEach(b => b.addEventListener("click", () => switchView(b.dataset.view)));
+document.querySelectorAll(".filters button").forEach(b => b.addEventListener("click", () => switchArea(b.dataset.area)));
+
+// Initial render
+switchView("overview");
+</script>
+</body>
+</html>
