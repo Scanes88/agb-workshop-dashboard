@@ -137,9 +137,9 @@
     </div>
 
     <div class="section-header">3 Company Themes</div>
-    <div class="theme-bar"><div class="top"><span class="name">1. The Coaching Gap</span><span class="count">11 / 15 teams</span></div><div class="track"><div class="fill" style="width:73%"></div></div><div class="desc">Leaders working down a level. Not enough big-picture strategy. Teams want trust and empowerment.</div></div>
-    <div class="theme-bar"><div class="top"><span class="name">2. Prioritisation</span><span class="count">13 / 15 teams</span></div><div class="track"><div class="fill" style="width:87%"></div></div><div class="desc">When everything is a priority, nothing is a priority. Too reactive. Not enough structured work time.</div></div>
-    <div class="theme-bar"><div class="top"><span class="name">3. Meeting Culture</span><span class="count">10 / 15 teams</span></div><div class="track"><div class="fill" style="width:67%"></div></div><div class="desc">Too many meetings. No consideration in booking. No time to do other work.</div></div>
+    <div class="theme-bar"><div class="top"><span class="name">1. The Coaching Gap</span><span class="count">11 / 15 workshops</span></div><div class="track"><div class="fill" style="width:73%"></div></div><div class="desc">Leaders working down a level. Not enough big-picture strategy. Teams want trust and empowerment.</div></div>
+    <div class="theme-bar"><div class="top"><span class="name">2. Prioritisation</span><span class="count">13 / 15 workshops</span></div><div class="track"><div class="fill" style="width:87%"></div></div><div class="desc">When everything is a priority, nothing is a priority. Too reactive. Not enough structured work time.</div></div>
+    <div class="theme-bar"><div class="top"><span class="name">3. Meeting Culture</span><span class="count">10 / 15 workshops</span></div><div class="track"><div class="fill" style="width:67%"></div></div><div class="desc">Too many meetings. No consideration in booking. No time to do other work.</div></div>
 
     <div class="section-header">All Teams Overview</div>
     <div class="card">
@@ -156,9 +156,9 @@
   <!-- THEMES -->
   <div id="view-themes" class="hidden">
     <div class="section-header">Company Themes - The 3 Universal Findings</div>
-    <div class="theme-bar"><div class="top"><span class="name">1. The Coaching Gap</span><span class="count">11 / 15 teams (73%)</span></div><div class="track"><div class="fill" style="width:73%"></div></div><div class="desc">Leaders doing too much operational work instead of working through their teams. Teams want trust and empowerment. Not enough strategic work happening because leaders are consumed by tasks their teams should own.</div></div>
-    <div class="theme-bar"><div class="top"><span class="name">2. Prioritisation</span><span class="count">13 / 15 teams (87%)</span></div><div class="track"><div class="fill" style="width:87%"></div></div><div class="desc">When everything is a priority, nothing is a priority. Teams are too reactive, not proactive enough. They struggle to push back and ask for clarity. Not enough time for structured, strategic work.</div></div>
-    <div class="theme-bar"><div class="top"><span class="name">3. Meeting Culture</span><span class="count">10 / 15 teams (67%)</span></div><div class="track"><div class="fill" style="width:67%"></div></div><div class="desc">Too many meetings. Too many meetings people do not need to be in. No consideration when booking meetings. No time to do other work because the calendar is full.</div></div>
+    <div class="theme-bar"><div class="top"><span class="name">1. The Coaching Gap</span><span class="count">11 / 15 workshops (73%)</span></div><div class="track"><div class="fill" style="width:73%"></div></div><div class="desc">Leaders doing too much operational work instead of working through their teams. Teams want trust and empowerment. Not enough strategic work happening because leaders are consumed by tasks their teams should own.</div></div>
+    <div class="theme-bar"><div class="top"><span class="name">2. Prioritisation</span><span class="count">13 / 15 workshops (87%)</span></div><div class="track"><div class="fill" style="width:87%"></div></div><div class="desc">When everything is a priority, nothing is a priority. Teams are too reactive, not proactive enough. They struggle to push back and ask for clarity. Not enough time for structured, strategic work.</div></div>
+    <div class="theme-bar"><div class="top"><span class="name">3. Meeting Culture</span><span class="count">10 / 15 workshops (67%)</span></div><div class="track"><div class="fill" style="width:67%"></div></div><div class="desc">Too many meetings. Too many meetings people do not need to be in. No consideration when booking meetings. No time to do other work because the calendar is full.</div></div>
 
     <div class="section-header">Area Theme Comparison</div>
     <div class="chart-container"><canvas id="radarChart" height="320"></canvas></div>
@@ -179,7 +179,7 @@
   <!-- PRIORITIES -->
   <div id="view-priorities" class="hidden">
     <div class="section-header">90-Day Priorities - All Teams</div>
-    <p style="font-size:12px;color:var(--grey);margin-bottom:14px;">42 priorities committed across 15 teams. Every team has at least 1 priority linked to meetings, time, or communication.</p>
+    <p style="font-size:12px;color:var(--grey);margin-bottom:14px;">42 priorities committed across 15 workshops. Every team has at least 1 priority linked to meetings, time, or communication.</p>
     <div id="prioritiesByArea"></div>
 
     <div class="section-header">Priority Themes Distribution</div>
@@ -349,7 +349,7 @@ function renderWordChart() {
     },
     options: {
       indexAxis: "y", responsive: true,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.raw} / 15 teams` } } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.raw} / 15 workshops` } } },
       scales: { x: { max: 15, ticks: { font: { size: 11 } } }, y: { ticks: { font: { size: 12, weight: "bold" } } } }
     }
   });
